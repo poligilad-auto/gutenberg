@@ -3,20 +3,15 @@ import { _x, sprintf } from '@wordpress/i18n';
 import { store as noticesStore } from '@wordpress/notices';
 import { useMemo } from '@wordpress/element';
 import { parse } from '@wordpress/blocks';
-import type { Action } from '@wordpress/dataviews';
-import type { Post, TemplatePart } from '../../shared/types';
+import type { Post, TemplatePart, ActionScriptParts } from '../../shared/types';
 import { CreateTemplatePartModalContents } from './create-template-part-modal-contents';
 import { getItemTitle } from '../../shared/utils';
 
 /**
  * This action is used to duplicate a template part.
  */
-const duplicateTemplatePart: Action< TemplatePart > = {
-	id: 'duplicate-template-part',
-	label: _x( 'Duplicate…', 'action label' ),
+const duplicateTemplatePart: ActionScriptParts< TemplatePart > = {
 	isEligible: ( item ) => item.type === 'wp_template_part',
-	modalHeader: _x( 'Duplicate template part', 'action label' ),
-	modalFocusOnMount: 'firstContentElement',
 	RenderModal: ( { items, closeModal } ) => {
 		const [ item ] = items;
 		const blocks = useMemo( () => {
@@ -62,6 +57,7 @@ const duplicateTemplatePart: Action< TemplatePart > = {
 	},
 };
 /**
- * Duplicate action for TemplatePart.
+ * The JavaScript parts of the duplicate action for TemplatePart; its data is in
+ * `action.php`.
  */
 export default duplicateTemplatePart;
