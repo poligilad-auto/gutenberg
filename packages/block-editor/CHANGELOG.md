@@ -28,6 +28,10 @@
 -   Block Toolbar: Show a generic icon and accessible name on the phone placeholder's block button when no default block type is registered ([#84533](https://github.com/WordPress/gutenberg/pull/84533)).
 
 
+### Internal
+
+-   Convert the block edit context, block context, block icon, block editing mode, `useSettings`, block refs, Global Styles utils and inheritance, and spacing size utils to TypeScript ([#84625](https://github.com/WordPress/gutenberg/pull/84625)).
+
 ## 18.1.0 (2026-10-07)
 
 ### New Features
