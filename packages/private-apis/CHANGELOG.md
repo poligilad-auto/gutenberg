@@ -8,7 +8,7 @@
 
 ### Internal
 
--   Add `@wordpress/core-actions` to the list of core modules allowed to use private APIs.
+-   Add `@wordpress/core-actions` to the list of core modules allowed to use private APIs ([#84643](https://github.com/WordPress/gutenberg/pull/84643)).
 
 ## 2.0.0 (2026-10-07)
 
