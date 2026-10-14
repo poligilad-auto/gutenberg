@@ -6,6 +6,10 @@ For features included in the Gutenberg plugin, the deprecation policy is intende
 
 -   `wp.blocks.isValidBlockContent` has been removed. Please use `wp.blocks.validateBlock` instead.
 
+## 24.5
+
+-   `wp.editor.registerEntityAction` and `wp.editor.unregisterEntityAction`, deprecated since 24.3 and available only in the Gutenberg plugin, have no effect: every action of an entity is registered on the server. Register and unregister actions in PHP on the `wp_actions_api_init` action instead, with a script module for the parts PHP cannot serialize (`callback`, `RenderModal`, `isEligible`…).
+
 ## 11.0.0
 
 -   `wp.blocks.registerBlockTypeFromMetadata` method has been removed. Use `wp.blocks.registerBlockType` method instead.

@@ -1,5 +1,5 @@
 import { store as coreStore } from '@wordpress/core-data';
-import type { Action, Field } from '@wordpress/dataviews';
+import type { Field } from '@wordpress/dataviews';
 import { doAction } from '@wordpress/hooks';
 import type { PostType } from '@wordpress/fields';
 import {
@@ -66,32 +66,6 @@ function hasEditorNotesSupport( supports?: PostType[ 'supports' ] ): boolean {
 	return false;
 }
 
-export function registerEntityAction< Item >(
-	kind: string,
-	name: string,
-	config: Action< Item >
-) {
-	return {
-		type: 'REGISTER_ENTITY_ACTION' as const,
-		kind,
-		name,
-		config,
-	};
-}
-
-export function unregisterEntityAction(
-	kind: string,
-	name: string,
-	actionId: string
-) {
-	return {
-		type: 'UNREGISTER_ENTITY_ACTION' as const,
-		kind,
-		name,
-		actionId,
-	};
-}
-
 export function registerEntityField< Item >(
 	kind: string,
 	name: string,
@@ -151,43 +125,6 @@ const ORDERED_MEDIA_FIELDS = [
 	mediaDescriptionField,
 ];
 
-type CoreActions = Record< string, Action< any > >;
-
-/**
- * Imports the script modules of the core actions a post type may get: the
- * default actions, and the actions of patterns and template parts.
- *
- * A module that fails to load is reported and skipped, so the post type
- * still gets its fields and the actions of the other modules.
- *
- * @param postType The post type.
- * @return The actions of each module, keyed by action id.
- */
-async function importCoreActionModules(
-	postType: string
-): Promise< [ CoreActions, CoreActions, CoreActions ] > {
-	const results = await Promise.allSettled( [
-		import( '@wordpress/core-actions/post_type_supports' ),
-		postType === 'wp_block'
-			? import( '@wordpress/core-actions/wp_block' )
-			: undefined,
-		postType === 'wp_template_part'
-			? import( '@wordpress/core-actions/wp_template_part' )
-			: undefined,
-	] );
-	return results.map( ( result ) => {
-		if ( result.status === 'rejected' ) {
-			// eslint-disable-next-line no-console
-			console.warn(
-				`Could not load the core actions of the ${ postType } post type.`,
-				result.reason
-			);
-			return {};
-		}
-		return result.value?.default ?? {};
-	} ) as [ CoreActions, CoreActions, CoreActions ];
-}
-
 export const registerPostTypeSchema =
 	( postType: string ) =>
 	async ( { registry }: { registry: any } ) => {
@@ -204,89 +141,16 @@ export const registerPostTypeSchema =
 			postType
 		);
 
-		// Start importing the script modules of the core actions while the
-		// post type, the permissions, and the theme resolve.
-		const coreActionModules = importCoreActionModules( postType );
-
 		const postTypeConfig = ( await registry
 			.resolveSelect( coreStore )
 			.getPostType( postType ) ) as PostType;
 
-		const canCreate = await registry
-			.resolveSelect( coreStore )
-			.canUser( 'create', {
-				kind: 'postType',
-				name: postType,
-			} );
 		const currentTheme = await registry
 			.resolveSelect( coreStore )
 			.getCurrentTheme();
 		const { disablePostFormats } = registry
 			.select( editorStore )
 			.getEditorSettings();
-
-		const [
-			postTypeSupportsActions,
-			wpBlockActions,
-			wpTemplatePartActions,
-		] = await coreActionModules;
-		const {
-			'view-post': viewPost,
-			'view-post-revisions': viewPostRevisions,
-			'duplicate-post': duplicatePost,
-			'rename-post': renamePost,
-			'order-pages': reorderPage,
-			restore: restorePost,
-			'reset-post': resetPost,
-			'delete-post': deletePost,
-			'move-to-trash': trashPost,
-			'permanently-delete': permanentlyDeletePost,
-		} = postTypeSupportsActions;
-		const {
-			'duplicate-pattern': duplicatePattern,
-			'export-pattern': exportPattern,
-		} = wpBlockActions;
-		const { 'duplicate-template-part': duplicateTemplatePart } =
-			wpTemplatePartActions;
-
-		let canDuplicate =
-			! [ 'wp_block', 'wp_template_part', 'wp_template' ].includes(
-				postTypeConfig.slug
-			) &&
-			canCreate &&
-			duplicatePost;
-
-		// @ts-expect-error `globalThis` has no index signature for this build-time global.
-		if ( ! globalThis.IS_GUTENBERG_PLUGIN ) {
-			// Outside Gutenberg, disable duplication.
-			canDuplicate = undefined;
-		}
-
-		const actions = [
-			postTypeConfig.viewable ? viewPost : undefined,
-			!! postTypeConfig.supports?.revisions
-				? viewPostRevisions
-				: undefined,
-			canDuplicate,
-			postTypeConfig.slug === 'wp_template_part' &&
-			canCreate &&
-			currentTheme?.is_block_theme
-				? duplicateTemplatePart
-				: undefined,
-			canCreate && postTypeConfig.slug === 'wp_block'
-				? duplicatePattern
-				: undefined,
-			postTypeConfig.supports?.title ? renamePost : undefined,
-			postTypeConfig.supports?.[ 'page-attributes' ]
-				? reorderPage
-				: undefined,
-			postTypeConfig.slug === 'wp_block' ? exportPattern : undefined,
-			restorePost,
-			resetPost,
-			deletePost,
-			trashPost,
-			permanentlyDeletePost,
-		].filter( Boolean );
 
 		// Handle attachment post type separately with media-specific fields
 		let fields;
@@ -376,13 +240,6 @@ export const registerPostTypeSchema =
 		}
 
 		registry.batch( () => {
-			actions.forEach( ( action ) => {
-				unlock( registry.dispatch( editorStore ) ).registerEntityAction(
-					'postType',
-					postType,
-					action
-				);
-			} );
 			fields.forEach( ( field ) => {
 				unlock( registry.dispatch( editorStore ) ).registerEntityField(
 					'postType',

@@ -290,7 +290,6 @@ Private exports:
 Private actions:
 - `createTemplate`
 - `hideBlockTypes`
-- `registerEntityAction`
 - `registerPostTypeActions`
 - `removeTemplates`
 - `revertTemplate`
@@ -298,10 +297,8 @@ Private actions:
 - `setCurrentTemplateId`
 - `setIsReady`
 - `showBlockTypes`
-- `unregisterEntityAction`
 
 Private selectors:
-- `getEntityActions`
 - `getInserter`
 - `getInserterSidebarToggleRef`
 - `getListViewToggleRef`

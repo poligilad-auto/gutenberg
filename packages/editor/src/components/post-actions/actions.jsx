@@ -1,23 +1,12 @@
-import { useDispatch, useSelect } from '@wordpress/data';
-import { useMemo, useEffect } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
+import { useMemo } from '@wordpress/element';
 import { store as coreStore } from '@wordpress/core-data';
-import { store as editorStore } from '../../store';
-import { unlock } from '../../lock-unlock';
 import { useActions } from '../../dataviews/actions-loader';
 import { useSetAsHomepageAction } from './set-as-homepage';
 import { useSetAsPostsPageAction } from './set-as-posts-page';
 
 export function usePostActions( { postType, onActionPerformed, context } ) {
-	const { defaultActions } = useSelect(
-		( select ) => {
-			const { getEntityActions } = unlock( select( editorStore ) );
-			return {
-				defaultActions: getEntityActions( 'postType', postType ),
-			};
-		},
-		[ postType ]
-	);
-	const serverActions = useActions( { kind: 'postType', name: postType } );
+	const defaultActions = useActions( { kind: 'postType', name: postType } );
 
 	const shouldShowHomepageActions = useSelect(
 		( select ) => {
@@ -69,21 +58,8 @@ export function usePostActions( { postType, onActionPerformed, context } ) {
 	const setAsHomepageAction = useSetAsHomepageAction();
 	const setAsPostsPageAction = useSetAsPostsPageAction();
 
-	const { registerPostTypeSchema } = unlock( useDispatch( editorStore ) );
-	useEffect( () => {
-		registerPostTypeSchema( postType );
-	}, [ registerPostTypeSchema, postType ] );
-
 	return useMemo( () => {
-		// The actions registered on the server follow the ones of the store,
-		// and cannot take their ids.
-		let actions = [
-			...defaultActions,
-			...serverActions.filter(
-				( action ) =>
-					! defaultActions.some( ( { id } ) => id === action.id )
-			),
-		];
+		let actions = [ ...defaultActions ];
 		if ( shouldShowHomepageActions ) {
 			actions.push( setAsHomepageAction, setAsPostsPageAction );
 		}
@@ -158,7 +134,6 @@ export function usePostActions( { postType, onActionPerformed, context } ) {
 		context,
 		defaultActions,
 		onActionPerformed,
-		serverActions,
 		setAsHomepageAction,
 		setAsPostsPageAction,
 		shouldShowHomepageActions,
