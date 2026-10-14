@@ -290,7 +290,7 @@ Private exports:
 Private actions:
 - `createTemplate`
 - `hideBlockTypes`
-- `registerPostTypeActions`
+- `registerPostTypeSchema`
 - `removeTemplates`
 - `revertTemplate`
 - `saveDirtyEntities`
